@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ohne Punkt und Komma</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 50px;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #008cba;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .button:hover {
+            background-color: #005f6b;
+        }
+        select, textarea {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+            width: 80%;
+            max-width: 500px;
+        }
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .missing {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ohne Punkt und Komma</h1>
+    <p>Wählen Sie eine Textdatei zum Bearbeiten aus:</p>
+    <select id="fileSelector" onchange="loadFile()">
+        <option value="">-- Wählen Sie eine Textdatei --</option>
+        <option value="text1.txt">Textdatei 1</option>
+        <option value="text2.txt">Textdatei 2</option>
+        <option value="text3.txt">Textdatei 3</option>
+    </select><br>
+    <p>Originaltext (Kommas entfernt):</p>
+    <textarea id="textArea" rows="10" readonly></textarea>
+    <p>Bearbeiten Sie den Text, indem Sie die Kommas wieder hinzufügen:</p>
+    <textarea id="modifiedTextArea" rows="10"></textarea><br>
+    <button class="button" onclick="checkCommas()">Absenden</button>
+    <div id="result"></div>
+
+    <script>
+        let originalText = "";
+
+        function loadFile() {
+            const selectedFile = document.getElementById('fileSelector').value;
+            if (selectedFile) {
+                fetch(selectedFile)
+                    .then(response => response.text())
+                    .then(data => {
+                        originalText = data;
+                        const textWithoutCommas = originalText.replace(/,/g, '');
+                        document.getElementById('textArea').value = textWithoutCommas;
+                        document.getElementById('modifiedTextArea').value = textWithoutCommas;
+                        document.getElementById('result').innerHTML = "";
+                    })
+                    .catch(error => {
+                        console.error('Fehler beim Laden der Datei:', error);
+                    });
+            } else {
+                document.getElementById('textArea').value = "";
+                document.getElementById('modifiedTextArea').value = "";
+                document.getElementById('result').innerHTML = "";
+            }
+        }
+
+        function checkCommas() {
+            const userText = document.getElementById('modifiedTextArea').value;
+            let resultHTML = "<p>Ergebnis:</p><div>";
+            let correctCount = 0;
+            let incorrectCount = 0;
+            let missingCount = 0;
+            let originalCommaCount = (originalText.match(/,/g) || []).length;
+
+            let originalIndex = 0;
+            let userIndex = 0;
+
+            while (originalIndex < originalText.length) {
+                if (originalText[originalIndex] === ',') {
+                    if (userText[userIndex] === ',') {
+                        resultHTML += `<span class="correct">,</span>`;
+                        correctCount++;
+                        userIndex++;
+                    } else {
+                        resultHTML += `<span class="missing">,</span>`;
+                        missingCount++;
+                    }
+                    originalIndex++;
+                } else {
+                    if (userText[userIndex] === ',') {
+                        resultHTML += `<span class="incorrect">,</span>`;
+                        incorrectCount++;
+                        userIndex++;
+                    } else {
+                        resultHTML += originalText[originalIndex];
+                        originalIndex++;
+                        userIndex++;
+                    }
+                }
+            }
+
+            resultHTML += `</div><p>Gesamtanzahl der Kommas im Originaltext: ${originalCommaCount}</p>`;
+            resultHTML += `<p>Korrekte Kommas: ${correctCount}</p>`;
+            resultHTML += `<p>Falsche Kommas: ${incorrectCount}</p>`;
+            resultHTML += `<p>Fehlende Kommas: ${missingCount}</p>`;
+            document.getElementById('result').innerHTML = resultHTML;
+        }
+    </script>
+</body>
+</html>
